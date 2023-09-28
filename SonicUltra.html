@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ultra Sonic 2D</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+</head>
+<body>
+  <script>
+    let saveData = [];
+    let gameState = "menu";
+    let sonicX, sonicY; // Sonic's position in the hub
+    let checksum; // Checksum for Sonic's state
+
+    function setup() {
+      createCanvas(400, 400);
+      loadSaveData();
+      sonicX = 200;
+      sonicY = 280;
+    }
+
+    function draw() {
+      background(220);
+
+      if (gameState === "menu") {
+        drawMenu();
+      } else if (gameState === "overworld") {
+        drawOverworld();
+        checksum = sonicX + sonicY; // Simple checksum
+      }
+
+      // GUI
+      fill(200);
+      rect(10, 10, 100, 30);
+      fill(0);
+      text("Start Game", 20, 30);
+
+      fill(200);
+      rect(120, 10, 100, 30);
+      fill(0);
+      text("Delete Save", 130, 30);
+    }
+
+    function drawMenu() {
+      fill(0);
+      rect(50, 50, 300, 100);
+      fill(255);
+      textSize(16);
+      textAlign(CENTER, CENTER);
+
+      for (let i = 0; i < saveData.length; i++) {
+        text(saveData[i], 200, 70 + i * 30);
+      }
+    }
+
+    function drawOverworld() {
+      fill(0, 255, 0);
+      rect(0, 300, 400, 100);
+      fill(0, 0, 255);
+      ellipse(sonicX, sonicY, 50, 50);
+      fill(255);
+      text("Checksum: " + checksum, 50, 50);
+    }
+
+    function mousePressed() {
+      // GUI buttons
+      if (mouseX > 10 && mouseX < 110 && mouseY > 10 && mouseY < 40) {
+        gameState = "overworld";
+      }
+      if (mouseX > 120 && mouseX < 220 && mouseY > 10 && mouseY < 40) {
+        localStorage.clear();
+        loadSaveData();
+      }
+
+      if (gameState === "menu") {
+        for (let i = 0; i < saveData.length; i++) {
+          if (mouseX > 50 && mouseX < 350 && mouseY > 70 + i * 30 && mouseY < 100 + i * 30) {
+            if (saveData[i] === "Empty Slot") {
+              saveData[i] = "Saved Game " + (i + 1);
+              localStorage.setItem("saveData", JSON.stringify(saveData));
+            } else {
+              gameState = "overworld";
+            }
+          }
+        }
+      } else if (gameState === "overworld") {
+        let d = dist(mouseX, mouseY, sonicX, sonicY);
+        if (d < 25) {
+          gameState = "menu";
+        }
+      }
+    }
+
+    function keyPressed() {
+      if (gameState === "overworld") {
+        if (keyCode === LEFT_ARROW) {
+          sonicX -= 5;
+        }
+        if (keyCode === RIGHT_ARROW) {
+          sonicX += 5;
+        }
+      }
+    }
+
+    function loadSaveData() {
+      let data = localStorage.getItem("saveData");
+      if (data) {
+        saveData = JSON.parse(data);
+      } else {
+        for (let i = 0; i < 3; i++) {
+          saveData[i] = "Empty Slot";
+        }
+      }
+    }
+  </script>
+</body>
+</html>
